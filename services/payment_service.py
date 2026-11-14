@@ -1,0 +1,32 @@
+
+import httpx
+from core.config import settings
+
+
+class StripePaymentGateway:
+    def __init__(self, api_key: str = None):
+        self.api_key = api_key or settings.STRIPE_API_KEY
+        self.url = "https://api.stripe.mock/v1/charges"
+
+    async def execute_charge(
+        self,
+        token: str,
+        amount: float
+    ) -> bool:
+        payload = {
+            "token": token,
+            "amount": amount,
+            "key": self.api_key
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.post(
+                    self.url,
+                    json=payload
+                )
+
+                return response.status_code == 200
+
+        except httpx.HTTPError:
+            return False
